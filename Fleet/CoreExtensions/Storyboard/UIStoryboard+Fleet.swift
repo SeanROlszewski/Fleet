@@ -135,6 +135,14 @@ extension UIStoryboard {
         try bind(viewController: mock!, asInitialViewControllerForReferencedStoryboardWithName: name)
         return mock!
     }
+    
+    public func bind(viewController: UIViewController, asDestinationOfSegueWithIdentifier segueIdentifier: String) throws {
+        
+    }
+    
+    public func mockSegue<T>(withIdentifier segueIdentifier: String, toUseMockAsDestination classToMock: T.Type) throws -> T where T: UIViewController {
+        return T()
+    }
 
     /**
      Binds the given view controller to the view controller reference associated with the

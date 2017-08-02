@@ -169,19 +169,59 @@ class UIStoryboard_FleetSpec: XCTestCase {
             raiseException(named: "Fleet.StoryboardError", reason: "Attempted to bind a view controller whose view has already been loaded to initial view controller of storyboard 'PuppyStoryboard'. Fleet throws an error when this occurs because UIKit does not load the view of a segue destination view controller before calling 'prepareForSegue:', and so binding a preloaded view controller invalidates the environment of the test code.", userInfo: nil, closure: nil)
         )
     }
-
+    
+    func test_bindAsDestinationOfSegueWithIdentifier_whenSegueWithGivenIdentifierExistsOnTheStoryboard_transitionsToTheBoundViewControllerWhenSegueIsFired() {
+        let boundViewController = UIViewController()
+        try! turtlesAndFriendsStoryboard.bind(viewController: boundViewController, asDestinationOfSegueWithIdentifier: "ShowBoxTurtle")
+        
+        let rootViewController = turtlesAndFriendsStoryboard.instantiateViewController(withIdentifier: "AnimalListViewController") as! AnimalListViewController
+        
+        Fleet.setAsAppWindowRoot(rootViewController)
+        
+        // This button is wired to trigger the "ShowBoxTurtle" segue
+        try! rootViewController.boxTurtleButton?.tap()
+        
+        expect(Fleet.getApplicationScreen()?.topmostViewController).toEventually(beIdenticalTo(boundViewController))
+    }
+    
+    func test_bindAsDestinationOfSegueWithIdentifier_whenInvalidIdentifier_raisesException() {
+        expect { _ = try self.turtlesAndFriendsStoryboard.bind(viewController: UIViewController(), asDestinationOfSegueWithIdentifier: "MissingSegue") }.to(
+            raiseException(named: "Fleet.StoryboardError", reason: "Could not find segue with identifier 'MissingSegue' on storyboard with name 'TurtlesAndFriendsStoryboard'", userInfo: nil, closure: nil)
+        )
+    }
+    
+    func test_mockSegueToReturn_whenSegueWithGivenIdentifierExistsOnTheStoryboard_transitionsToTheMockedViewControllerWhenSegueIsFired() {
+        let mockViewController = try! turtlesAndFriendsStoryboard.mockSegue(withIdentifier: "ShowBoxTurtle", toUseMockAsDestination: BoxTurtleViewController.self)
+        expect(mockViewController).to(beAKindOf(BoxTurtleViewController.self))
+        
+        let rootViewController = turtlesAndFriendsStoryboard.instantiateViewController(withIdentifier: "AnimalListViewController") as! AnimalListViewController
+        
+        Fleet.setAsAppWindowRoot(rootViewController)
+        
+        // This button is wired to trigger the "ShowBoxTurtle" segue
+        try! rootViewController.boxTurtleButton?.tap()
+        
+        expect(Fleet.getApplicationScreen()?.topmostViewController).toEventually(beIdenticalTo(mockViewController))
+    }
+    
+    func test_mockSegueToReturn_whenInvalidIdentifier_raisesException() {
+        expect { _ = try self.turtlesAndFriendsStoryboard.mockSegue(withIdentifier: "MissingSegue", toUseMockAsDestination: UIViewController.self) }.to(
+            raiseException(named: "Fleet.StoryboardError", reason: "Could not find segue with identifier 'MissingSegue' on storyboard with name 'TurtlesAndFriendsStoryboard'", userInfo: nil, closure: nil)
+        )
+    }
+    
     func test_multipleStoryboardSupport() {
         let turtleStoryboardTwo = UIStoryboard(name: "TurtlesAndFriendsStoryboard", bundle: nil)
-
+        
         let mockBoxTurtleViewControllerBlue = MockBoxTurtleViewController()
         try! turtlesAndFriendsStoryboard.bind(viewController: mockBoxTurtleViewControllerBlue, toIdentifier: "BoxTurtleViewController")
-
+        
         let mockBoxTurtleViewControllerGreen = MockBoxTurtleViewController()
         try! turtleStoryboardTwo.bind(viewController: mockBoxTurtleViewControllerGreen, toIdentifier: "BoxTurtleViewController")
-
+        
         let blueBoxTurtleViewController = turtlesAndFriendsStoryboard.instantiateViewController(withIdentifier: "BoxTurtleViewController")
         expect(blueBoxTurtleViewController).to(beIdenticalTo(mockBoxTurtleViewControllerBlue))
-
+        
         let greenBoxTurtleViewController = turtleStoryboardTwo.instantiateViewController(withIdentifier: "BoxTurtleViewController")
         expect(greenBoxTurtleViewController).to(beIdenticalTo(mockBoxTurtleViewControllerGreen))
     }

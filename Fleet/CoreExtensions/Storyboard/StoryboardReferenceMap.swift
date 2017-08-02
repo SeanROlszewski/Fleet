@@ -6,6 +6,11 @@ struct ExternalReferenceDefinition {
     var externalStoryboardName = ""
 }
 
+struct SegueDefinition {
+    var segueId = ""
+    var destinationViewControllerIdentifier = ""
+}
+
 struct StoryboardReferenceMap {
     var viewControllerIdentifiers: [String] = []
     var externalReferences: [ExternalReferenceDefinition] = []

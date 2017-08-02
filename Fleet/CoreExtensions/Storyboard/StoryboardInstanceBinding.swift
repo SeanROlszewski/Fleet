@@ -35,7 +35,6 @@ internal final class StoryboardInstanceBinding {
     }
 
     func bind(viewController: UIViewController, toIdentifier identifier: String, forReferencedStoryboardWithName name: String) throws {
-
         var referenceExists = false
         if let storyboardReferenceMap = storyboardReferenceMap {
             for externalReference in storyboardReferenceMap.externalReferences {
